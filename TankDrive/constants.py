@@ -139,5 +139,3 @@ default_target_reflection = 0
 start_run_button = Button.CENTER
 #in order of runs
 run_colors = [Color.GREEN, Color.WHITE, Color.BROWN, Color.RED, Color.YELLOW, Color.BLACK, Color.BLUE, None]
-
-

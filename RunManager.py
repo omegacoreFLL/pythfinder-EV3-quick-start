@@ -72,9 +72,16 @@ def dummy():
     return 0
 
 def test():
-    inLineCM(40, core, tangential_angle = 45, threshold = 6, interpolating = True, inOtherFunction = False, accelerating = True,
+    inLineCM(40, core, tangential_angle = 45, threshold = 6, interpolating = True, inOtherFunction = True, accelerating = True,
             listOfCommands = [Command(motor = core.leftTask, run_type = "DC", speed = 80, start_percent = 60)]
     )
+    inLineCM(40, core, tangential_angle = 10, threshold = 6, interpolating = True, inOtherFunction = True, accelerating = True,
+            listOfCommands = [Command(motor = core.leftTask, run_type = "DC", speed = 80)]
+    )
+    inLineCM(40, core, tangential_angle = -20, threshold = 6, interpolating = True, inOtherFunction = False, accelerating = True,
+            listOfCommands = [Command(motor = core.leftTask, run_type = "DC", speed = 80, end_percent = 50)]
+    )
+
     core.printPose()
 
 

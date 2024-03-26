@@ -6,7 +6,7 @@ import math
 
 from BetterClasses.ButtonsEx import *
 from BetterClasses.ErrorEx import *
-from BetterClasses.mathEx import * 
+from BetterClasses.MathEx import * 
 from TankDrive.constants import *
 
 #instead of an enum
