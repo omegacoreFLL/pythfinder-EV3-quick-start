@@ -1,6 +1,4 @@
-from BetterClasses.ErrorEx import *
-
-#general edge detector class
+# general edge detector class
 class EdgeDetectorEx():
     def __init__(self):
         self.__current = False
@@ -12,7 +10,6 @@ class EdgeDetectorEx():
         self.low = False
     
     def set(self, current):
-        isType([current], ["current"], [bool])
         self.__current = current
 
     def update(self):

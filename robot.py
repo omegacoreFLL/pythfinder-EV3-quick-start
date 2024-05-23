@@ -1,4 +1,4 @@
-#importing all the pybricks stuff
+# importing all the pybricks stuff
 
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
@@ -11,15 +11,14 @@ import math
 from Controllers.RunController import *
 from BetterClasses.TelemetryEx import *
 from BetterClasses.ButtonsEx import *
-from BetterClasses.MotorEx import *
 from BetterClasses.MathEx import * 
-from TankDrive.constants import *
 from BetterClasses.LedEx import *
+from TankDrive.constants import *
 from TankDrive.odometry import *
 
-#core class, assuming the most common configuration of an ev3 FLL robot:
+# core class, assuming the most common configuration of an ev3 FLL robot:
 #               - 2 driving motors
-#               - 2 free motors (for attachments)
+#               - 2 free / task motors (for attachments)
 #               - 2 color sensors, symmetrical to an imaginary middle line, in front of the robot
 #               - 1 gyro sensor
 class Robot:
@@ -42,71 +41,42 @@ class Robot:
         self.localizer = TwoWheelLocalizer(self.leftDrive, self.rightDrive, self.gyro, upside_down_gyro = True)
 
         self.led_control = LedEx(self.brick)
-        self.led_control.addTakeYourHandsOffColor(None).build()
+        self.led_control.addTakeYourHandsOffColor(None)
 
-        self.failSwitchTimer = StopWatch()
+        self.fail_switch_timer = StopWatch()
         self.voltage = 0
-        self.failSwitchTime = 0
-
-        self.lastLeftSpeed = 0
-        self.lastRightSpeed = 0
-        self.is_stopped = True
-        self.acceleration_timer = StopWatch()
+        self.fail_switch_time = 0
     
 
 
     def normalizeVoltage(self, power):
         if self.voltage != 0:
-            return power * maxVoltage / self.voltage
+            return power * MAX_VOLTAGE / self.voltage
         return power
     
     def resetFailSwitch(self, fst):
-        self.failSwitchTimer.reset()
-        self.failSwitchTime = fst
+        self.fail_switch_timer.reset()
+        self.fail_switch_time = fst
     
     def failSwitchStop(self):
-        if msToS(self.failSwitchTimer.time()) > self.failSwitchTime:
+        if msToS(self.fail_switch_timer.time()) > self.fail_switch_time:
             return True 
         return False
+
+    def setWheelPowers(self, left, right, sensitivity = 1):
+        self.leftDrive.dc(clipMotor(self.normalizeVoltage(left * sensitivity)))
+        self.rightDrive.dc(clipMotor(self.normalizeVoltage(right * sensitivity)))
     
-
-        self.brick.screen.print(message)
-    
-    def slewRateLimiter(self, targetSpeed):
-        if self.is_stopped:
-            self.acceleration_timer.reset()
-            self.is_stopped = False
-        
-        acceleration = (msToS(self.acceleration_timer.time()) / acceleration_interval) * acceleration_dc
-        if abs(acceleration) < abs(targetSpeed):
-            return acceleration * signum(targetSpeed)
-        return targetSpeed
-        
-
-
-
-    def setWheelPowers(self, left, right, sensitivity = 1, accelerating = False):
-        if accelerating:
-            left = self.slewRateLimiter(left)
-            right = self.slewRateLimiter(right)
-
-        self.leftDrive.dc(clipMotor(self.normalizeVoltage(left) * sensitivity))
-        self.rightDrive.dc(clipMotor(self.normalizeVoltage(right) * sensitivity))
-
-        if left == 0 and right == 0:
-            self.is_stopped = True
-        else: self.is_stopped = False
-    
-    def setDriveTo(self,stop_type):
-        if stop_type == Stop.COAST:        
+    def setDriveTo(self, stop_type):
+        if stop_type is Stop.COAST:        
             self.leftDrive.stop()
             self.rightDrive.stop()
         
-        elif stop_type == Stop.BRAKE:
+        elif stop_type is Stop.BRAKE:
             self.leftDrive.brake()
             self.rightDrive.brake()
         
-        elif stop_type == Stop.HOLD:
+        elif stop_type is Stop.HOLD:
             self.leftDrive.hold()
             self.rightDrive.hold()
 

@@ -1,72 +1,65 @@
-from pybricks.parameters import Button, Color
 from BetterClasses.EdgeDetectorEx import *
-from BetterClasses.ErrorEx import *
-from pybricks.hubs import EV3Brick
+from pybricks.parameters import Button
 
-#edge detectors for each button on the brick
+# edge detectors for each button on the brick
+
 class ButtonEx:
     def __init__(self, brick):
-        isType([brick], ["brick"], [EV3Brick])
         self.__brick = brick
 
-        self.__button_list = [Button.LEFT, Button.RIGHT, Button.UP, Button.DOWN, Button.CENTER]
-        self.__button_list_len = len(self.__button_list)
-        self.__pressedButtons = []
-        self.__detector_list = []
+        # dictionary for all EV3 buttons (excepting the exit button, we don't talk about that)
+        self.__buttons = {
+            Button.LEFT: EdgeDetectorEx(), 
+            Button.RIGHT: EdgeDetectorEx(), 
+            Button.UP: EdgeDetectorEx(), 
+            Button.DOWN: EdgeDetectorEx(), 
+            Button.CENTER: EdgeDetectorEx()
+        }
 
-        for i in range(len(self.__button_list)):
-            self.__detector_list.append(EdgeDetectorEx())
-
-    def __updateGamepad(self):
-        self.__pressedButtons = self.__brick.buttons.pressed()
-        
-
-        if len(self.__pressedButtons) > 0:
-            for b in self.__pressedButtons:
-                for i in range(self.__button_list_len):
-                    if b == self.__button_list[i]:
-                        self.__detector_list[i].set(True)
-                    else: self.__detector_list[i].set(False)
-        else: 
-            for i in range(self.__button_list_len):
-                self.__detector_list[i].set(False)
-
-    def __updateDetectors(self):
-        for detector in self.__detector_list:
-            detector.update()
+        self.__button_list_len = 5
+        self.__pressed_buttons = []
 
     def updateButtons(self):
-        self.__updateGamepad()
-        self.__updateDetectors()
+        # get the current gamepad state
+        self.__pressed_buttons = self.__brick.buttons.pressed()
+        
+        if not self.__pressed_buttons:
+            # no button is pressed
+            for detector in self.__buttons.values():
+                detector.set(False)
+                detector.update()
+            
+            return None
+            
+        # take only the first pressed button
+        pressed_button = next(iter(self.__pressed_buttons))
+
+        for button, detector in self.__buttons.items():
+            if pressed_button == button:
+                detector.set(True)
+            else: detector.set(False)    
+            detector.update()      
 
 
 
-    def wasJustPressed(self, b):
-        isType([b], ["b"], [Button])
+    def wasJustPressed(self, button):
+        try: 
+            return self.__buttons[button].rising
+        except: print("\n\nthat's not a button?? {0}".format(button))
 
-        for i in range(self.__button_list_len):
-            if b == self.__button_list[i]:
-                return self.__detector_list[i].rising
-
-    def wasJustReleased(self, b):
-        isType([b], ["b"], [Button])
-
-        for i in range(self.__button_list_len):
-            if b == self.__button_list[i]:
-                return self.__detector_list[i].falling
+    def wasJustReleased(self, button):
+        try:
+            return self.__buttons[button].falling
+        except: print("\n\nthat's not a button??")
 
 
 
-    def isPressed(self, b):
-        isType([b], ["b"], [Button])
+    def isPressed(self, button):
+        try:
+            return self.__buttons[button].high
+        except: print("\n\nthat's not a button??")
 
-        for i in range(self.__button_list_len):
-            if b == self.__button_list[i]:
-                return self.__detector_list[i].high
-
-    def isReleased(self, b):
-        isType([b], ["b"], [Button])
-
-        for i in range(self.__button_list_len):
-            if b == self.__button_list[i]:
-                return self.__detector_list[i].low
+    def isReleased(self, button):
+        try:
+            return self.__buttons[button].low
+        except: print("\n\nthat's not a button??")

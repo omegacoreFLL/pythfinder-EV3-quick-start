@@ -1,8 +1,9 @@
 from pybricks.ev3devices import Motor, GyroSensor
 from pybricks.tools import StopWatch
-from BetterClasses.ErrorEx import *
+
 from BetterClasses.MathEx import *
 from TankDrive.constants import *
+
 import math
 
 
@@ -15,15 +16,12 @@ def __encoderTicksToCM(ticks):
 class TwoWheelLocalizer:
 
     def __init__(self, left, right, gyroscope, upside_down_gyro = False):
-        isType([left, right, gyroscope, upside_down_gyro],
-                ["left", "right", "gyroscope", "upside_down_gyro"],
-                [Motor, Motor, GyroSensor, bool])
 
         self.__pose = Pose(0, 0, 0)
         self.__pastPose = Pose(0, 0, 0)
 
-        self.__leftEncoder = left
-        self.__rightEncoder = right
+        self.__left_encoder = left
+        self.__right_encoder = right
         self.__gyro = gyroscope
         self.__timer = StopWatch()
 
@@ -41,9 +39,10 @@ class TwoWheelLocalizer:
 
 
     def setPoseEstimate(self, newPose):
-        isType([newPose], ["newPose"], [Pose])
-        self.__gyro_offset = self.__gyro.angle() - newPose.head
-        self.__pose = self.__pastPose = Pose(newPose.x, newPose.y, normalizeDegrees(newPose.head))
+
+        newPose.head = normalizeDegrees(newPose.head)
+        self.__gyro_offset = self.__gyro.angle() + newPose.head
+        self.__pose = self.__pastPose = Pose(newPose.x, newPose.y, newPose.head)
 
         self.__pastPoseL, self.__pastPoseR, self.__pastAngle, self.__pastTime, self.__pastDistance, self.__pastVel = [
             self.__poseL, self.__poseR, self.__angle, self.__time, self.__deltaDistance, self.__vel ]
@@ -54,8 +53,8 @@ class TwoWheelLocalizer:
         self.__timer.reset()
     
     def zeroEncoders(self):
-        self.__leftEncoder.reset_angle(0)
-        self.__rightEncoder.reset_angle(0)
+        self.__left_encoder.reset_angle(0)
+        self.__right_encoder.reset_angle(0)
     
     def zeroGyro(self):
         self.__gyro.reset_angle(0)
@@ -79,8 +78,8 @@ class TwoWheelLocalizer:
 
     
     def updateDeltas(self):
-        self.__poseL = __encoderTicksToCM(self.__leftEncoder.angle())
-        self.__poseR = __encoderTicksToCM(self.__rightEncoder.angle())
+        self.__poseL = __encoderTicksToCM(self.__left_encoder.angle())
+        self.__poseR = __encoderTicksToCM(self.__right_encoder.angle())
         self.__angle = normalizeDegrees(self.__gyro.angle() * self.__gyro_direction + self.__gyro_offset)
         self.__time = self.__timer.time()
 
@@ -118,10 +117,14 @@ class TwoWheelLocalizer:
         return self.__pose
     
     def getRawEncoderTicks(self):
-        return (self.__leftEncoder.angle(), self.__rightEncoder.angle())
+        return (self.__left_encoder.angle(), self.__right_encoder.angle())
     
     def getVelocity(self):
         return self.__vel
+    
+    # used on feedforward motion to decrease loop time
+    def getHeading(self):
+        return normalizeDegrees(self.__gyro.angle() * self.__gyro_direction + self.__gyro_offset)
 
 
 
