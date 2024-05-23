@@ -1,4 +1,6 @@
 # **Installing:**
+*outdated photots, but the same essential steps*
+
 First, copy the project url from the GitHub page:
 
 <p align="center">
