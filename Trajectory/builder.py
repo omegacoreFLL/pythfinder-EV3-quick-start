@@ -29,12 +29,10 @@ class Marker():
 
 # simplified implemetation of motion states.
 class MotionState():
-    def __init__(self, velocities, 
-                 heading, turn = False):
+    def __init__(self, velocities, heading):
 
         self.velocities = velocities # [-100, 100] ; tuple -> (left, right)
         self.head = heading # int
-        self.turn = turn # bool
 
 class Trajectory():
 
@@ -75,23 +73,16 @@ class Trajectory():
 
         # iterate through all given timestamps
         for each in marker_times:
-            try: self.markers[i].time = int(each) # if a marker exists, set the time
+            try: 
+                self.markers[i].value = int(each) # if a marker exists, set the time
             except: self.markers.append(Marker(time = int(each), fun = None)) # if not, create one
             finally: i += 1
         
         first = msToS(elapsed.time())
         print("\nfirst line reading: {0}s".format(first - opening_time))
 
-        # second line is the start and end poses + step size
-        coords = lines[1].split()
-
-        self.start_pose = Pose(x = float(coords[0]),
-                          y = float(coords[1]),
-                          head = float(coords[2]))
-        self.end_pose = Pose(x = float(coords[3]),
-                        y = float(coords[4]),
-                        head = float(coords[5]))
-        steps = int(coords[6])
+        # second line is the step size
+        steps = int(lines[1])
         
         second = msToS(elapsed.time())
         print("\nsecond line reading: {0}s".format(second - first))
@@ -106,21 +97,16 @@ class Trajectory():
         length = len(other)
         #the other lines are 'state' values
         for i in range(0, length, 4):
-            last = int(other[i + 3])
-            mod = last % 10
-            div = int(last / 10)
 
-            TURN = bool(mod)
-            LEFT = float(other[i + 0])
+            LEFT = float(other[i])
             RIGHT = float(other[i + 1])
             HEAD = float(other[i + 2])
+            copies = int(other[i + 3])
 
-            for _ in range(div):
+            for _ in range(copies):
                 for _ in range(steps):
-                    self.states.append(MotionState(turn = TURN,
-                                                velocities = (LEFT,
-                                                                RIGHT),
-                                                heading = HEAD)
+                    self.states.append(MotionState(velocities = (LEFT, RIGHT),
+                                                   heading = HEAD)
                     )
 
         
@@ -152,13 +138,14 @@ class Trajectory():
         # iterate through all given functions
         for each in fun:
             try: self.markers[i].fun = each # if a marker exists, set the function
-            except: self.markers.append(Marker(time = None, fun = each)) # if not, create one
+            except: 
+                self.markers.append(Marker(time = None, fun = each)) # if not, create one
             finally: i += 1
         
         return self
 
     def follow(self, robot):
-        if self.TRAJ_TIME == 0 or self.TRAJ_TIME is None: #empty trajectory
+        if self.TRAJ_TIME == 0 or self.TRAJ_TIME is None: # empty trajectory
             print('\n\nsomething is empty :(')
             print('it may be the trajectory')
             print('or it may be my soul')
@@ -167,17 +154,17 @@ class Trajectory():
         
         print('\n\nFOLLOWING TRAJECTORY...')
         
-        robot.localizer.setPoseEstimate(self.start_pose)
         self.marker_number = len(self.markers)
         self.marker_iterator = 0
 
-        robot.target_head = self.__realFollow(robot)
+        robot.localizer.zero()
+        self.__realFollow(robot)
         robot.setDriveTo(Stop.COAST)
 
         robot.leftTask.stop()
         robot.rightTask.stop()
         
-        #markers from last miliseconds or beyond the time limit
+        # markers from last miliseconds or beyond the time limit
         while self.marker_iterator < self.marker_number:
             marker = self.markers[self.marker_iterator]
 
@@ -197,8 +184,6 @@ class Trajectory():
 
 
     def __realFollow(self, robot):
-        target_angle = robot.localizer.getPoseEstimate().head
-
         marker = (Marker(0, 0) if self.marker_number == 0 else
                         self.markers[self.marker_iterator])
 
@@ -207,8 +192,14 @@ class Trajectory():
         start_time = 0
         timer = StopWatch()
 
-        while time <= self.TRAJ_TIME:
+        while time < self.TRAJ_TIME:
+            time = timer.time()
+            
+            try: state = self.states[time]
+            except: continue
+
             heading = robot.localizer.getHeading()
+            target_angle = state.head
 
             if time >= marker.value and self.marker_iterator < self.marker_number:
                 threading.Thread(target = marker.do).start()
@@ -216,25 +207,12 @@ class Trajectory():
                 
                 try: marker = self.markers[self.marker_iterator]
                 except: pass
-
-       
-            try: state = self.states[time]
-            except: continue
             
             LEFT, RIGHT = state.velocities
             
             if LEFT == 0 and RIGHT == 0:
                 robot.setDriveTo(Stop.BRAKE)
         
-            #print(time - past_time)
-            if abs(state.head - heading) > 3 and state.turn:
-                beforeTurn = timer.time()
-
-                turnDeg(state.head, robot)
-
-                target_angle = state.head
-                start_time += timer.time() - beforeTurn + 1
-
         
             head_error = findShortestPath(heading, target_angle)
             correction = self.head_controller.calculate(head_error)
@@ -243,6 +221,3 @@ class Trajectory():
             RIGHT += correction
 
             robot.setWheelPowers(LEFT, RIGHT)
-
-            past_time = time
-            time = timer.time() - start_time
