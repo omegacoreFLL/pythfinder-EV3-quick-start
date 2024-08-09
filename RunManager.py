@@ -1,27 +1,20 @@
 
-from pybricks.tools import wait, StopWatch
-import math
+from pybricks.tools import wait
 
 from Controllers.RunController import *
 from BetterClasses.ButtonsEx import *
 from BetterClasses.MathEx import * 
-from TankDrive.constants import *
-from Trajectory.feedback import *
 from Trajectory.builder import *
+from Settings.constants import *
 from robot import *
 
 
 # create the main robot object here
-core = Robot()
+# reverse gyro if needed
+core = Robot(upside_down_gyro = True)
 
 trajectory1 = (Trajectory()
-               .recieve('test')
-               .withMarkers(fun = (
-                    lambda: core.rightTask.run_angle(330, rotation_angle = -180),
-                    lambda: core.leftTask.dc(100),
-                    lambda: core.leftTask.stop(),
-                    lambda: core.leftTask.dc(100),
-                    lambda: core.leftTask.stop())))
+               .read('test'))
 
 
 
@@ -30,7 +23,7 @@ def start_run():
     global core
 
     if zeroBeforeEveryRun:
-        core.localizer.zero()
+        core.zero()
     
     if takeHandsOff:
         core.led_control.take_your_hands_off()
@@ -67,13 +60,6 @@ def run6():
 
 def run7():
     return 0
-
-# main loop function. Need to be called on loop in ---main.py---
-def loop():
-    if core.run_control.entered_center:
-        core.led_control.entered_center()
-    else: core.led_control.not_started()
-    core.update()
 
 def dummy():
     wait(1000)

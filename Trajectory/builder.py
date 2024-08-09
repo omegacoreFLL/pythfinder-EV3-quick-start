@@ -3,8 +3,8 @@ from pybricks.parameters import Stop
 
 from Controllers.PIDController import *
 from BetterClasses.MathEx import *
-from Trajectory.feedback import *
-from TankDrive.constants import *
+from Settings.constants import *
+from robot import *
 
 import threading
 
@@ -17,43 +17,46 @@ import threading
 
 # simplified implementation of markers.
 class Marker():
-    def __init__(self, time, fun):
+    def __init__(self, time: int, fun: function):
         self.value = time
         self.fun = fun
     
     def do(self):
         try: self.fun()
-        except: print("\n\nexcuse me, what? \nprovide a method in the 'Marker' object with the value '{0}' and type '{1}'"
-                      .format(self.value, self.type.name))
+        except: print("\n\nexcuse me, what? \nprovide a method in the 'Marker' object with the value '{0}'"
+                      .format(self.value))
 
 
 # simplified implemetation of motion states.
 class MotionState():
-    def __init__(self, velocities, heading):
+    def __init__(self, velocities: tuple, heading: float):
 
         self.velocities = velocities # [-100, 100] ; tuple -> (left, right)
-        self.head = heading # int
+        self.head = heading # float
 
 class Trajectory():
 
     # the default constructor for trajectories. Allows empty trajectories too.
-    def __init__(self, time = None, start_pose = None, end_pose = None, 
-                 states = None, markers = None):
+    def __init__(self):
         
         self.head_controller = PIDController(kP = kP_head, kD = kD_head, kI = 0)
-        self.markers = markers
-        self.states = states
+        self.markers = None
+        self.states = None
 
-        self.start_pose = start_pose
-        self.end_pose = end_pose
+        self.start_pose = None
+        self.end_pose = None
 
-        self.TRAJ_TIME = time
+        self.TRAJ_TIME = None
 
     # reads the values constructed by PythFinder. It NEEDS to match generating format.
+    # the right format is:
+    #       line 1: nr of steps
+    #       line 2: pairs of: LEFT speed - RIGHT speed - heading DEG - consecutive copies
     #
     # takes the name of the text file you want the data to be read from.
-    # ALL FILES ARE LOOKED IN THE --- Trajectory/TXT --- PATH
-    def recieve(self, file_name):
+    # ALL FILES ARE LOOKED FOR IN THE --- Trajectory/TXT --- PATH
+
+    def read(self, file_name):
         print('\n\nreading sweet data from {0}.txt'.format(file_name))
         elapsed = StopWatch()
 
@@ -103,11 +106,10 @@ class Trajectory():
             HEAD = float(other[i + 2])
             copies = int(other[i + 3])
 
-            for _ in range(copies):
-                for _ in range(steps):
-                    self.states.append(MotionState(velocities = (LEFT, RIGHT),
-                                                   heading = HEAD)
-                    )
+            self.states.extend(MotionState(
+                velocities = (LEFT, RIGHT), heading = HEAD)
+                        for _ in range(copies * steps))
+
 
         
         self.TRAJ_TIME = len(self.states)
@@ -144,22 +146,24 @@ class Trajectory():
         
         return self
 
-    def follow(self, robot):
+
+
+    def follow(self, robot: Robot, telemetry: bool = False):
         if self.TRAJ_TIME == 0 or self.TRAJ_TIME is None: # empty trajectory
             print('\n\nsomething is empty :(')
             print('it may be the trajectory')
-            print('or it may be my soul')
             print("you'll never know...")
             return 0
         
-        print('\n\nFOLLOWING TRAJECTORY...')
+        if telemetry:
+            print('\n\nFOLLOWING TRAJECTORY...')
         
         self.marker_number = len(self.markers)
         self.marker_iterator = 0
 
-        robot.localizer.zero()
+        robot.zero()
         self.__realFollow(robot)
-        robot.setDriveTo(Stop.COAST)
+        robot.setDriveTo(Stop.BRAKE)
 
         robot.leftTask.stop()
         robot.rightTask.stop()
@@ -175,21 +179,15 @@ class Trajectory():
             threading.Thread(target = marker.do).start()
             self.marker_iterator += 1
 
-        
-        print('\n\nTRAJECTORY COMPLETED! ;)')
 
-                            
+        if telemetry:
+            print('\n\nTRAJECTORY COMPLETED! ;)')
 
-
-
-
-    def __realFollow(self, robot):
+    def __realFollow(self, robot: Robot):
         marker = (Marker(0, 0) if self.marker_number == 0 else
                         self.markers[self.marker_iterator])
 
         time = 0
-        past_time = 0
-        start_time = 0
         timer = StopWatch()
 
         while time < self.TRAJ_TIME:
@@ -198,7 +196,7 @@ class Trajectory():
             try: state = self.states[time]
             except: continue
 
-            heading = robot.localizer.getHeading()
+            heading = robot.getHeading()
             target_angle = state.head
 
             if time >= marker.value and self.marker_iterator < self.marker_number:
@@ -213,9 +211,8 @@ class Trajectory():
             if LEFT == 0 and RIGHT == 0:
                 robot.setDriveTo(Stop.BRAKE)
         
-        
             head_error = findShortestPath(heading, target_angle)
-            correction = self.head_controller.calculate(head_error)
+            correction = self.head_controller.calculate(head_error) * robot.config.PID_multiplier
 
             LEFT -= correction
             RIGHT += correction

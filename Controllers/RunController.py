@@ -1,14 +1,18 @@
-from pybricks.parameters import Button, Color
-from pybricks.tools import wait
-
 from BetterClasses.EdgeDetectorEx import *
-from TankDrive.constants import *
+from BetterClasses.ColorSensorEx import *
+from BetterClasses.TelemetryEx import *
+from BetterClasses.ButtonsEx import *
 
-import math
+from Settings.constants import *
 
 # class to describe run-specific constants
 class Run():
-    def __init__(self, button, function, run_number = None, color = None, one_time_use = True, with_center = False):
+    def __init__(self, button: Button, 
+                       function: function, 
+                       run_number: int | None = None, 
+                       color: Color | None = None, 
+                       one_time_use: bool = True, 
+                       with_center: bool = False):
         if not button == None:
             if button == Button.CENTER:
                 raise Exception("can't use 'Button.CENTER' for starting a run")
@@ -50,7 +54,10 @@ class Run():
 
 # logic for run-selection. Don't modify things here    
 class RunController():
-    def __init__(self, gamepad, brick, telemetry, run_list = None):
+    def __init__(self, gamepad: ButtonEx, 
+                       brick: EV3Brick, 
+                       telemetry: TelemetryEx, 
+                       run_list = None):
 
         self.next_run = 1
         self.run_loops = 0
@@ -89,13 +96,13 @@ class RunController():
         
         self.__showcaseNextRun()
     
-    def addBeforeEveryRun(self, function):
+    def addBeforeEveryRun(self, function: function):
         self.before_every_run = function
     
-    def addAfterEveryRun(self, function):
+    def addAfterEveryRun(self, function: function):
         self.after_every_run = function
 
-    def addColorSensor(self, sensor):
+    def addColorSensor(self, sensor: ColorSensorEx):
         self.color_sensor = sensor
         self.color_sensor_control = True
 
@@ -112,18 +119,6 @@ class RunController():
     
 
 
-    def __shouldStartRun(self, run):
-        if not run.runable():
-            return None
-        
-        run.update()
-
-        if (run.with_center and self.entered_center) or (not run.with_center and not self.entered_center):
-            if self.gamepad.wasJustPressed(run.button):
-                run.running.set(True)
-
-
-
     def __updateManual(self):
         if self.gamepad.wasJustPressed(Button.CENTER):
             self.entered_center = not self.entered_center
@@ -137,7 +132,6 @@ class RunController():
 
         for run in range(self.total_runs):
             current_run = self.run_list[run]
-            #print(current_run.run_number)
 
             # get eligible runnable runs
             if not do_runs_in_order or current_run.run_number == self.next_run:
@@ -156,33 +150,32 @@ class RunController():
 
                     else: self.run_list[run].running.set(False)
 
-        #print('\n\n\n')
         # found the next run
-        if not optimal_run.button == None:
-            print(optimal_run.run_number)          
+        if not optimal_run.button == None:          
             self.__start(optimal_run)
         
-    def __updateNextRun(self, current_run):
-        if current_run.run_number == self.next_run:
+    def __updateNextRun(self, current_run: Run):
+        if not current_run.run_number == self.next_run:
+            return None
 
-            verified = 0
-            found = False
+        verified = 0
+        found = False
 
-            # loop through all runs, starting from the one just ran
-            # stop when:
-            #       - one runnable function is found
-            #       - you've looped one time through all runs and you didn't find any runnable one
+        # loop through all runs, starting from the one just ran
+        # stop when:
+        #       - one runnable function is found
+        #       - you've looped one time through all runs and you didn't find any runnable one
 
-            while not found and verified <= self.total_runs:
+        while not found and verified <= self.total_runs:
 
-                if self.next_run >= self.total_runs:
-                    self.next_run = 1
-                    self.run_loops += 1
-                else: self.next_run += 1
+            if self.next_run >= self.total_runs:
+                self.next_run = 1
+                self.run_loops += 1
+            else: self.next_run += 1
 
-                if self.run_list[self.next_run - 1].runable():
-                    found = True
-                verified += 1
+            if self.run_list[self.next_run - 1].runable():
+                found = True
+            verified += 1
 
     def __updateAuto(self):
         self.seen_color = self.color_sensor.color()
@@ -196,6 +189,8 @@ class RunController():
                 if current_run.hasJustStarted():
                     self.__start(current_run)
     
+
+
     def update(self):
         # skip the update when done
         if self.__done():
@@ -210,7 +205,17 @@ class RunController():
 
 
 
-    def __start(self, run):
+    def __shouldStartRun(self, run: Run):
+        if not run.runable():
+            return None
+        
+        run.update()
+
+        if (run.with_center and self.entered_center) or (not run.with_center and not self.entered_center):
+            if self.gamepad.wasJustPressed(run.button):
+                run.running.set(True)
+
+    def __start(self, run: Run):
         if not self.before_every_run == None:
             self.before_every_run()
         self.__showcaseInProgress(run.run_number)
@@ -224,16 +229,23 @@ class RunController():
         self.__updateNextRun(current_run = run)
         self.__showcaseNextRun()
 
+    def __done(self):
+        for run in self.run_list:
+            if not run.done():
+                return False
+        
+        return True
 
 
-    def __showcaseInProgress(self, run_number):
+
+
+    def __showcaseInProgress(self, run_number: int):
         self.telemetry.clear()
         self.telemetry.addData("                          ")
         self.telemetry.addData("                          ")
         self.telemetry.addData("run {0}".format(run_number))
         self.telemetry.addData("  in progress...")
     
-    # maybe you can modify the telemetry message :D
     def __showcaseNextRun(self):
         self.telemetry.clear()
 
@@ -242,7 +254,7 @@ class RunController():
             self.telemetry.addData("    DONE    ")
             self.telemetry.addData("     <3         ")
 
-            return 0
+            return None
         
         next_run = self.run_list[self.next_run - 1]
 
@@ -257,12 +269,5 @@ class RunController():
 
         else: self.telemetry.addData(run_colors[next_run.run_number - 1])
 
-
-    def __done(self):
-        for run in self.run_list:
-            if not run.done():
-                return False
-        
-        return True
 
 

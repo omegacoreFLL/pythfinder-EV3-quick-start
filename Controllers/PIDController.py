@@ -1,9 +1,9 @@
 
 from pybricks.tools import StopWatch
 
-#generic PID controller
+# generic PID controller
 class PIDController():
-    def __init__(self, kP = 0, kI = 0, kD = 0):
+    def __init__(self, kP: float = 0, kI: float = 0, kD: float = 0):
         self.__kP = kP
         self.__kD = kD
         self.__kI = kI
@@ -17,12 +17,14 @@ class PIDController():
     
         self.__derivative_timer = StopWatch()
     
-    def setCoefficients(self, kP = None, kI = None, kD = None):
+    def setCoefficients(self, kP: float | None = None, 
+                              kI: float | None = None, 
+                              kD: float | None = None):
         if not kP == None: self.__kP = kP
         if not kI == None: self.__kI = kI
         if not kD == None: self.__kD = kD
 
-    def calculate(self, error):
+    def calculate(self, error: float):
         self.__current_time = self.__derivative_timer.time()
         self.__integral += error
 

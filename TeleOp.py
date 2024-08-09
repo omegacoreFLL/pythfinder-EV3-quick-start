@@ -3,7 +3,7 @@
 from BetterClasses.EdgeDetectorEx import *
 from Controllers.PIDController import *
 from BetterClasses.MathEx import *
-from TankDrive.constants import *
+from Settings.constants import *
 from robot import *
 import struct
 

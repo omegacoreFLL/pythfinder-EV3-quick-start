@@ -1,10 +1,14 @@
-from BetterClasses.EdgeDetectorEx import *
 from pybricks.parameters import Button
+from pybricks.hubs import EV3Brick
+
+from BetterClasses.EdgeDetectorEx import *
+
 
 # edge detectors for each button on the brick
 
+
 class ButtonEx:
-    def __init__(self, brick):
+    def __init__(self, brick: EV3Brick):
         self.__brick = brick
 
         # dictionary for all EV3 buttons (excepting the exit button, we don't talk about that)
@@ -16,7 +20,6 @@ class ButtonEx:
             Button.CENTER: EdgeDetectorEx()
         }
 
-        self.__button_list_len = 5
         self.__pressed_buttons = []
 
     def updateButtons(self):
@@ -42,24 +45,24 @@ class ButtonEx:
 
 
 
-    def wasJustPressed(self, button):
+    def wasJustPressed(self, button: Button):
         try: 
             return self.__buttons[button].rising
         except: print("\n\nthat's not a button?? {0}".format(button))
 
-    def wasJustReleased(self, button):
+    def wasJustReleased(self, button: Button):
         try:
             return self.__buttons[button].falling
         except: print("\n\nthat's not a button??")
 
 
 
-    def isPressed(self, button):
+    def isPressed(self, button: Button):
         try:
             return self.__buttons[button].high
         except: print("\n\nthat's not a button??")
 
-    def isReleased(self, button):
+    def isReleased(self, button: Button):
         try:
             return self.__buttons[button].low
         except: print("\n\nthat's not a button??")
