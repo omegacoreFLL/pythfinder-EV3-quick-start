@@ -1,173 +1,234 @@
-# **Installing:**
-*outdated photots, but the same essential steps*
-
-First, copy the project url from the GitHub page:
-
-<p align="center">
-    <img src="https://i.ibb.co/R6XhyKw/install-1.png" alt="install-1">
+<p align="center" style="margin-bottom: 10px;">
+      <img src="https://i.ibb.co/mHSpjdL/pyth-finder-logo-ev3-quickstart.png" alt="pyth-finder-ev3-logo" border="0">
 </p>
 
-Open Visual Studio code and click on 'Source Control' --> 'Open Repository'
+![version_badge](https://img.shields.io/badge/alpha-0.0.4-006400)
+![quickstart](https://img.shields.io/badge/EV3_implementation-006400)
+![license](https://img.shields.io/badge/license-MIT-62e39e)
+
+
+# Installation
+## Pybricks
+Prior to attempting to utilize our library on a competition EV3 robot, it is crucial that you have a solid understanding of the `MicroPython` software.
+
+If you are new to MicroPython and have not worked with it previously, you need to carefully follow [**THIS INSTALLATION GUIDE**](0) for *`Pybricks`* tailored to your specific devices.
+
+
+## PythFinder
+
+To initiate the process of using the quick start guide, you will first need to clone the repository to your local environment. This can be accomplished by carefully following the outlined steps below:
+
+1) Click on the *Code* button from the GitHub page;
+2) Copy the project url;
 
 <p align="center">
-    <img src="https://i.ibb.co/jvzTcqf/install-2.png" alt="install-2">
+    <img src="https://i.ibb.co/MphJscW/img1-ev3.png" alt="install-1">
 </p>
 
-A window should pop on the top of the screen. Paste the link and click on 'Clone Repository' <br>
-(make sure you are connected to your GitHub account)
+3) Open Visual Studio code and click on 'Clone Git Repository' on the Welcome page. Alternatively, you can find this button in the **Explorer** tab;
 
 <p align="center">
-    <img src="https://i.ibb.co/SXJsmZ6/install-3.png" alt="install-3">
+    <img src="https://i.ibb.co/khMvVjw/img2-ev3.png" alt="install-2">
+</p>
+
+4) A window should pop on the top of the screen. Paste the link;
+5) Click on 'Clone from URL' button 
+(make sure you are connected to your GitHub account);
+
+<p align="center">
+    <img src="https://i.ibb.co/JmQ9zZG/img3-ev3.png" alt="install-3">
 </p>
 
 
-Select the folder you want to clone the project into
+6) Select the folder you want to clone the project into
 
 <p align="center">
-    <img src="https://i.ibb.co/qJq9hxR/install-4.png" alt="install-4">
+    <img src="https://i.ibb.co/5MDHYKF/img4-ev3.png" alt="install-4">
 </p>
 
 And you're done!! Now you can play with all the features!
 
 <p align="center">
-    <img src="https://i.ibb.co/Hr0Phpm/install-5.png" alt="install-5">
+    <img src="https://i.ibb.co/Yk7nvkj/img5-ev3.png" alt="install-5">
 </p>
 
 
+<br/>
 
-# **Usage:**
+
+# Usage
+
+## Setup
+Before you begin using the library, it is essential to customize your specific hardware configuration. This can be achieved by accessing the `hardware.cfg` file located in the **Settings** folder.
+
+<p align="center">
+    <img src="https://i.ibb.co/93ZrNbf/img6-ev3.png" alt="setup-1">
+</p>
+
+When you open this file, you can modify the `ports` assigned to each *motor* and *sensor*, as well as adjust the direction of the motors to suit YOUR configuration. 
+
+Please be aware that **two wheel motors and a gyro sensor are required** for the library to function properly. The inclusion of additional sensors and motors is *optional*. If you do not have some of these components, simply set their value to `None`.
+
+```ini
+# hardware.cfg
+
+[Motors]
+LeftWheelPort = C
+RightWheelPort = D
+LeftTaskPort = B
+RightTaskPort = A
+
+[Sensors]
+GyroPort = 3
+ColorSensorLeftPort = 4
+ColorSensorRightPort = 2
+AttachmentColorSensorPort = None
+
+[Directions]
+LeftWheelDirection = CLOCKWISE
+RightWheelDirection = CLOCKWISE
+LeftTaskDirection = COUNTERCLOCKWISE
+RightTaskDirection = COUNTERCLOCKWISE
+```
+
+<br/>
+
+And with that, you'll have **completed** the essential setup!
+
+For those seeking to fine-tune their configuration, additional **advanced settings** can be found in the `constants.py` file. This file contains detailed explanations for each configurable value, with comprehensive comments to guide you through the adjustments.
+
+However, **we strongly recommend** that you still verify the gyro sensor's orientation within the `constants.py` file.
 
 ## General Information
 
 ### main.py
-The `main.py` file is the heart of the program. It contains the default `loop()` method, along with some commented-out code that can be useful for determining the loop frequency.
+
+The `main.py` file serves as the core of the program, housing the **main loop** that drives the entire code.<br/>
+When launching the code from the brick's storage, you must execute **THIS** file.
+
+
 ```python
-# snippet from 'main.py'
+#!/usr/bin/env pybricks-micropython
 
-    # delete comments to see the frequency of one full loop
-    frequency_timer = StopWatch()
-    start_loop_time = 0
-    
-    while True:
-        loop() 
+from RunManager import *
 
-    #end_loop_time = frequency_timer.time()
-    #print("Frequency: {:.2f} loops / second".format(1000 / (end_loop_time - start_loop_time)))
-    #start_loop_time = end_loop_time
+while True:
+    core.update()
 ```
 
 ### RunManager.py
-The actual code is coordinated by 'RunManager.py', the file in which you should write your code.
+The core of the program is managed by the `RunManager.py` file, where you should write **your custom code**.
 
-By default, it creates a robot instance and contains methods for 7 total runs and the main 'loop()'. 
-In those, you can call trajectory following or external logic.
+By default, this file initializes a robot instance and includes methods for a total of **7 runs**.
 
-Reading trajectory data is straightforward. First, place your text file in the **Trajectory/TXT** folder. Then, create a new trajectory object and call the `.receive()` method, passing the name of the text file. If you have markers, also call the `.withMarkers()` method and pass the corresponding methods for each marker as a tuple. To follow the trajectory, call the `.follow()` method and pass the robot object. 
+<p align="center">
+    <img src="https://i.ibb.co/bmR7G12/img7-ev3.png" alt="run-manager">
+</p>
 
-When following the trajectory, the robot loops through all timestamps from the text file and adjusts motor powers accordingly. This approach is **`very fast`** since it requires minimal calculations. The only calculation performed is for the heading PID, which ensures the robot moves straight. Pure feedback control is used only during turns, where the trajectory follower pauses to let the `.turnDeg()` method execute.
 
-Optional '*before_run*' and '*after_run*' methods are also generated for managing LED control (these should not be modified). Next, create a **list** of `Run` objects, specifying at least a **button** and a **function** to be executed.
 
-Finally, add this list to the robot's run controller. Failing to do so will result in an error.
-```python
-# snippet from 'RunManager.py'
+Within these methods, you can invoke trajectory-following routines or implement external logic. An example 'test' trajectory is already provided and will be automatically executed to demonstrate the setup.
 
-    # create the main robot object here
-    core = Robot()
+***Using the trajectory data is straightforward***. 
 
-    # build the trajectory
-    trajectory = Trajectory().recieve('test')
+1) Place your text file generated by PythFinder in the **Trajectory/TXT** folder;
 
-    ...
+<p align="center">
+    <img src="https://i.ibb.co/8KYNpNg/img8-ev3.png" alt="trajectory-1">
+</p>
 
-    # create functions for each run you want to do
-    def run1():
-        trajectory.follow(core)
-        ...
+2) To create a new trajectory object, start by calling the `.receive()` method and provide the name of the text file as an argument. If your trajectory includes markers, also invoke the `.withMarkers()` method, passing a tuple containing the corresponding methods for each marker in chronological order;
 
-    # main loop function. Need to be called on loop in 'main.py'
-    def loop():
-        if core.run_control.entered_center:
-            core.led_control.entered_center()
-        else: core.led_control.not_started()
-        core.update()
+<p align="center">
+    <img src="https://i.ibb.co/rF1f5V8/img9-ev3.png" alt="trajectory-2">
+</p>
 
-    # defining '.start_run()' and '.stop_run()' methods 
-    ...
+3) Follow the trajectory with the `.follow()` method, passing the robot object as an argument.
 
-    # create the run list
-    run_list = [Run(button = Button.UP, function = run1, one_time_use =  False, with_center = False)]
+<p align="center">
+    <img src="https://i.ibb.co/SsD2tbk/img10-ev3.png" alt="trajectory-3">
+</p>
 
-    core.run_control.addRunList(run_list)
 
-    # optional
-    core.run_control.addBeforeEveryRun(function = start_run)
-    core.run_control.addAfterEveryRun(function = stop_run)
-```
 
-### robot.py
-All functionalities of this library are encapsulated in `robot.py`. This file assumes a standard EV3 robot configuration:
-* **2 drive motors**
-* **2 task motors**
-* **2 color sensor (for line following / squaring)**
-* **1 gyro**
+While following the trajectory, the robot iterates through all the timestamps from the text file, adjusting the motor powers accordingly.<br/>
+This method is **`highly efficient`** as it involves minimal calculations, with the only computation being the heading PID correction.
 
-If you have a different configuration, feel free to modify the code accordingly. Adjust the gyro orientation here to match your hardware setup. For instance, our test robot had the gyro mounted upside down, so we kept the default orientation value.
+<br/>
 
-You can also add sensors or remove task motors as needed. Once all hardware is correctly assigned, your `configuration is complete`.
-
+To append a run to each of the buttons, you will need to:
+1) Create a reparate function for each of your run programs;
 
 ```python
-# snippet from 'main.py'
+def run1():
+    trajectory1.follow(core)
 
-    # core class, assuming the most common configuration of an ev3 FLL robot:
-    #               - 2 driving motors
-    #               - 2 free motors (for attachments)
-    #               - 2 color sensors, symmetrical to an imaginary middle line, in front of the robot
-    #               - 1 gyro sensor
-    class Robot:
-        def __init__(self):
-            self.brick = EV3Brick()
+def run2():
+    trajectory20.follow(core)
+    wait(500)
+    trajectory21.follow(core)
 
-            # modify hardware objects accordingly. Port values will be assigned later, don't worry about it
-            self.leftTask = Motor(ltPort, positive_direction = Direction.COUNTERCLOCKWISE)
-            self.leftDrive = Motor(ldPort)
-            self.leftColor = ColorSensor(lcPort)
-    
-            self.rightTask = Motor(rtPort, positive_direction = Direction.COUNTERCLOCKWISE)
-            self.rightDrive = Motor(rdPort)
-            self.rightColor = ColorSensor(rcPort)
-
-            self.gyro = GyroSensor(gyroPort)
-            ...
-            # set gyro orientation here
-            self.localizer = TwoWheelLocalizer(self.leftDrive, self.rightDrive, self.gyro, upside_down_gyro = True)
-
+def run3():
     ...
+
+...
 ```
 
-### constants.py
+2) Create a run list by instantiating separate `Run()` objects for each of your desired programs. The parameters for each `Run()` instance should be provided in the following order:
+    * The **button** that needs to be pressed to initiate the run;
+    * The **function** to be executed during the run;
+    * A boolean indicating whether the run should be executable **only once or multiple times**;
+    * An optional parameter is the **run number**. If no number is specified, the code will automatically assign a number based on the run's position in the list;
+    * Another optional parameter to specify if the run should be **combined** with pressing the middle button;
 
+```python
+run_list = [Run(Button.UP, function = test, one_time_use =  False, with_center = False),
+            Run(Button.LEFT, function = dummy, one_time_use = False, run_number = 2),
+            Run(Button.DOWN, function = dummy, one_time_use = False),
+            Run(Button.DOWN, function = dummy, one_time_use = False)]
+```
 
-Default unit measures and necessary constants are listed in the file. You'll primarily be tuning the PID controller for turning. Other values to adjust include color thresholds, booleans, and measurements taken with a ruler or tape measure.
+If two or more runs share the same button combination for access, they will be executed sequentially according to the run numbers assigned to them.
 
-Tuning the `PID controller` can be challenging, so here are the recommended steps:
-* Make a dedicated run to just turning;
-* Gradually increase kP until the robot reaches the target and possibly oscillates slightly, but avoid aggressive oscillations;
-* Slowly increase kD until the oscillations disappear or are significantly reduced;
-* kI is generally unnecessary and should be avoided;
-* If the position is within a reasonable threshold of the target (approximately 2 degrees), you have successfully tuned the PID!
+3) Add the list to the run controller. Failing to do so will result in an error;
 
+```python
+core.run_control.addRunList(run_list)
+```
 
-There are excellent tutorials online for tuning a PID controller. <br/>
-If you encounter difficulties, refer to our  [MasterPiece][2] season code,  or reach out to us here or on our social media accounts. We are more than happy to help!
+4) You can also implement optional *`before_run`* and *`after_run`* methods, as demonstrated in the example below. These methods allow for additional actions to be executed before and after each run, providing greater flexibility and control over the robot's behavior.
+
+```python
+core.run_control.addBeforeEveryRun(function = start_run)
+core.run_control.addAfterEveryRun(function = stop_run)
+
+```
+
+### TeleOp.py
+To facilitate easier testing of the robot's mechanical components, such as the attachments or drivetrain, we have included code that allows you to **control the robot using a game controller**.
+
+This system is compatible with `PS3`, `PS4`, and `most Bluetooth controllers` that can connect to and be recognized by the EV3. It's designed to be plug-and-play, simply run the `TeleOp.py` file instead of `main.py`. For those interested in more advanced customization options, please refer to the **TeleOp.py** file itself.
+
+The control scheme for operating the robot is as follows:
+
+<p align="center">
+    <img src="https://i.ibb.co/K7XPnXV/controller-scheme.png" alt="trajectory-3">
+</p>
+
+1) Select the **LEFT** task motor (if you have one);
+2) Selecte the **RIGHT** task motor (if you have one);
+3) Move the robot **FORWARDS** / **BACKWARDS**;
+4) **TURN** the robot;
+5) **STOP** the selected task motor;
+6) set a **POSITIVE** dc power to the selected task motor;
+7) set a **NEGATIVE** dc power to the selected task motor;
 
 ## Advanced Usage
 
 *Check out the full library [here][1]*
 
 
-*v. 0.0.3-alpha*
+*v. 0.0.4-alpha*
 
 
 

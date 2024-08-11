@@ -21,7 +21,7 @@ from Settings.constants import *
 #               - 2 color sensors, symmetrical to an imaginary middle line, in front of the robot
 #               - 1 gyro sensor
 class Robot:
-    def __init__(self, upside_down_gyro: bool = False):
+    def __init__(self):
         self.brick = EV3Brick()
         self.config = ConfigReader()
 
@@ -39,10 +39,12 @@ class Robot:
 
 
         # left and right drive motors
-        self.leftDrive = Motor(self.config.left_wheel_port,
-                               positive_direction = self.config.left_wheel_direction)
-        self.rightDrive = Motor(self.config.right_wheel_port,
-                                positive_direction = self.config.right_wheel_direction)
+        try:
+            self.leftDrive = Motor(self.config.left_wheel_port,
+                                positive_direction = self.config.left_wheel_direction)
+            self.rightDrive = Motor(self.config.right_wheel_port,
+                                    positive_direction = self.config.right_wheel_direction)
+        except: raise Exception("You need to have TWO (2) driving motors. Please check your configuration")
 
 
         # left and right color sensors
@@ -55,25 +57,31 @@ class Robot:
         try: self.attachmentColor = ColorSensor(self.config.attachment_color_sensor_port)
         except: self.attachmentColor = None
 
-        self.gyro = GyroSensor(self.config.gyro_port)
-        
+        try:
+            self.gyro = GyroSensor(self.config.gyro_port)
+        except: raise Exception("You need to have a GYRO sensor. Please check your configuration")
 
 
-        self.gamepad = ButtonEx(self.brick)
-        self.telemetry = TelemetryEx(self.brick)
-        self.run_control = RunController(self.gamepad, self.brick, self.telemetry)
 
         self.led_control = LedEx(self.brick)
         self.led_control.addTakeYourHandsOffColor(None)
+
+        self.gamepad = ButtonEx(self.brick)
+        self.telemetry = TelemetryEx(self.brick)
+        self.run_control = RunController(self.gamepad, self.brick, self.telemetry, self.led_control)
 
         self.frequency_timer = StopWatch()
         self.start_loop_time = 0
 
         self.voltage = 0
 
-        if upside_down_gyro:
+        if up_side_down_gyro:
             self.__gyro_direction = -1
         else: self.__gyro_direction = 1
+
+        if front_side_back_gyro:
+            self.config.PID_multiplier *= -1
+        else: self.config.PID_multiplier *= 1
 
         if not self.attachmentColor == None:
             self.run_control.addColorSensor(self.attachmentColor)

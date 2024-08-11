@@ -2,8 +2,11 @@ from BetterClasses.EdgeDetectorEx import *
 from BetterClasses.ColorSensorEx import *
 from BetterClasses.TelemetryEx import *
 from BetterClasses.ButtonsEx import *
-
+from BetterClasses.MathEx import *
+from BetterClasses.LedEx import *
 from Settings.constants import *
+
+from pybricks.tools import wait
 
 # class to describe run-specific constants
 class Run():
@@ -56,7 +59,8 @@ class Run():
 class RunController():
     def __init__(self, gamepad: ButtonEx, 
                        brick: EV3Brick, 
-                       telemetry: TelemetryEx, 
+                       telemetry: TelemetryEx,
+                       led_control: LedEx,
                        run_list = None):
 
         self.next_run = 1
@@ -76,8 +80,9 @@ class RunController():
         self.gamepad = gamepad
         self.brick = brick
         self.telemetry = telemetry
+        self.led_control = led_control
 
-        self.beforeEveryRun = None
+        self.before_every_run = None
         self.after_every_run = None
     
 
@@ -116,7 +121,7 @@ class RunController():
             run.with_center = False
         
         self.__showcaseNextRun()
-    
+
 
 
     def __updateManual(self):
@@ -204,6 +209,18 @@ class RunController():
 
 
 
+    def __start_run_led_control(self):
+        if takeHandsOff:
+            self.led_control.take_your_hands_off()
+            wait(sToMs(time_to_take_hands_off))
+        
+        self.led_control.in_progress()
+
+    def __stop_run_led_control(self):
+        self.led_control.not_started()
+        self.brick.screen.clear()
+
+
 
     def __shouldStartRun(self, run: Run):
         if not run.runable():
@@ -218,6 +235,7 @@ class RunController():
     def __start(self, run: Run):
         if not self.before_every_run == None:
             self.before_every_run()
+        self.__start_run_led_control()
         self.__showcaseInProgress(run.run_number)
         
         run.start()
@@ -227,6 +245,7 @@ class RunController():
         self.entered_center = False
 
         self.__updateNextRun(current_run = run)
+        self.__stop_run_led_control()
         self.__showcaseNextRun()
 
     def __done(self):

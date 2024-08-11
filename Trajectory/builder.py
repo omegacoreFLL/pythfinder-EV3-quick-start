@@ -47,6 +47,7 @@ class Trajectory():
         self.end_pose = None
 
         self.TRAJ_TIME = None
+        self.STEPS = None
 
     # reads the values constructed by PythFinder. It NEEDS to match generating format.
     # the right format is:
@@ -85,7 +86,7 @@ class Trajectory():
         print("\nfirst line reading: {0}s".format(first - opening_time))
 
         # second line is the step size
-        steps = int(lines[1])
+        self.STEPS = int(lines[1])
         
         second = msToS(elapsed.time())
         print("\nsecond line reading: {0}s".format(second - first))
@@ -108,11 +109,11 @@ class Trajectory():
 
             self.states.extend(MotionState(
                 velocities = (LEFT, RIGHT), heading = HEAD)
-                        for _ in range(copies * steps))
+                        for _ in range(copies))
 
 
         
-        self.TRAJ_TIME = len(self.states)
+        self.TRAJ_TIME = len(self.states) * self.STEPS
         fourth = msToS(elapsed.time())
 
         print("\n\ndata collected... now let's get icecream 🥰")
@@ -193,7 +194,7 @@ class Trajectory():
         while time < self.TRAJ_TIME:
             time = timer.time()
             
-            try: state = self.states[time]
+            try: state = self.states[int(time / self.STEPS)]
             except: continue
 
             heading = robot.getHeading()

@@ -10,32 +10,23 @@ from robot import *
 
 
 # create the main robot object here
-# reverse gyro if needed
-core = Robot(upside_down_gyro = True)
+# set gyro orientation in **constants.py** if needed
+core = Robot()
 
 trajectory1 = (Trajectory()
                .read('test'))
 
 
 
-# default BEFORE / AFTER run functions. Not mandatory functions
+# you can create custom BEFORE / AFTER run functions
 def start_run():
     global core
 
     if zeroBeforeEveryRun:
         core.zero()
-    
-    if takeHandsOff:
-        core.led_control.take_your_hands_off()
-        wait(sToMs(time_to_take_hands_off))
-    
-    core.led_control.in_progress()
 
 def stop_run():
-    global core
-
-    core.led_control.not_started()
-    core.brick.screen.clear()
+    ...
 
 
 
@@ -78,8 +69,10 @@ run_list = [Run(Button.UP, function = test, one_time_use =  False, with_center =
             Run(Button.DOWN, function = dummy, one_time_use = False)]
 
 # MANDATORY!!! add a run list to the run controller from the robot class
-#               otherwise, you'll get an error. Add start / stop functions if you want
+#               otherwise, you'll get an error
 core.run_control.addRunList(run_list)
+
+# add before / after every run functions if you want
 core.run_control.addBeforeEveryRun(function = start_run)
 core.run_control.addAfterEveryRun(function = stop_run)
 
