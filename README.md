@@ -14,6 +14,9 @@ Prior to attempting to utilize our library on a competition EV3 robot, it is cru
 If you are new to MicroPython and have not worked with it previously, you need to carefully follow [**THIS INSTALLATION GUIDE**](0) for *`Pybricks`* tailored to your specific devices.
 
 
+Furthermore, to enable auto-complete features when coding, ensure you install `pybricks`, `pybricksdev`, and `pybricks-stubs` using **pip** in your development environment. If you choose not to use auto-complete, you can adjust the settings by editing the `settings.json` file according to the instructions in the comments.
+
+
 ## PythFinder
 
 To initiate the process of using the quick start guide, you will first need to clone the repository to your local environment. This can be accomplished by carefully following the outlined steps below:
